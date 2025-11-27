@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct DeliveryAppApp: App {
+    @StateObject private var menuController = MenuController()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(menuController)
         }
     }
 }

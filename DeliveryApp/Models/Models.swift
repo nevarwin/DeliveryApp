@@ -2,12 +2,12 @@
 //  Models.swift
 //  DeliveryApp
 //
-//  Basic data models for the flower delivery app (MVC - Model layer).
+//  Basic data models for the food delivery app (MVC - Model layer).
 //
 
 import Foundation
 
-struct Flower: Identifiable, Equatable {
+struct MenuItem: Identifiable, Equatable {
     let id: Int64
     var name: String
     var description: String

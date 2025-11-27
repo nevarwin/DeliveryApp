@@ -2,7 +2,7 @@
 //  Database.swift
 //  DeliveryApp
 //
-//  Lightweight SQLite helper and repository for flowers.
+//  Lightweight SQLite helper and repository for menu items.
 //
 
 import Foundation
@@ -17,7 +17,7 @@ final class DatabaseManager {
     private init() {
         openDatabase()
         createTablesIfNeeded()
-        seedInitialFlowersIfNeeded()
+        seedInitialMenuIfNeeded()
     }
     
     deinit {
@@ -40,8 +40,8 @@ final class DatabaseManager {
     }
     
     private func createTablesIfNeeded() {
-        let createFlowerTableSQL = """
-        CREATE TABLE IF NOT EXISTS flowers (
+        let createMenuTableSQL = """
+        CREATE TABLE IF NOT EXISTS menu_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             description TEXT,
@@ -53,9 +53,9 @@ final class DatabaseManager {
         guard let db = db else { return }
         
         var statement: OpaquePointer?
-        if sqlite3_prepare_v2(db, createFlowerTableSQL, -1, &statement, nil) == SQLITE_OK {
+        if sqlite3_prepare_v2(db, createMenuTableSQL, -1, &statement, nil) == SQLITE_OK {
             if sqlite3_step(statement) != SQLITE_DONE {
-                print("Could not create flowers table.")
+                print("Could not create menu_items table.")
             }
         } else {
             print("CREATE TABLE statement could not be prepared.")
@@ -65,35 +65,34 @@ final class DatabaseManager {
     
     // MARK: - Seeding
     
-    private func seedInitialFlowersIfNeeded() {
-        // If table already has data, skip
-        if !fetchFlowers().isEmpty {
+    private func seedInitialMenuIfNeeded() {
+        if !fetchMenuItems().isEmpty {
             return
         }
         
-        let initialFlowers: [(String, String, Double, String)] = [
-            ("Rose Bouquet", "Classic red roses wrapped beautifully.", 39.99, "rose"),
-            ("Tulip Mix", "Colorful tulips perfect for spring.", 29.99, "tulip"),
-            ("Sunflower Joy", "Bright sunflowers to light up any room.", 24.99, "sunflower"),
-            ("Orchid Elegance", "Elegant white orchids in a pot.", 49.99, "orchid")
+        let initialMenu: [(String, String, Double, String)] = [
+            ("Margherita Pizza", "Wood-fired pie with basil and mozzarella.", 14.99, "takeoutbag.and.cup.and.straw.fill"),
+            ("Sushi Bento", "Chef's choice nigiri with sides.", 22.49, "fish.fill"),
+            ("Vegan Buddha Bowl", "Roasted veggies, quinoa, tahini drizzle.", 17.99, "leaf.circle.fill"),
+            ("BBQ Brisket Sandwich", "Slow-smoked brisket on brioche.", 15.49, "fork.knife.circle")
         ]
         
-        for flower in initialFlowers {
-            _ = insertFlower(name: flower.0,
-                             description: flower.1,
-                             price: flower.2,
-                             imageName: flower.3)
+        for item in initialMenu {
+            _ = insertMenuItem(name: item.0,
+                               description: item.1,
+                               price: item.2,
+                               imageName: item.3)
         }
     }
     
     // MARK: - CRUD
     
-    func fetchFlowers() -> [Flower] {
+    func fetchMenuItems() -> [MenuItem] {
         guard let db = db else { return [] }
         
-        let querySQL = "SELECT id, name, description, price, imageName FROM flowers ORDER BY name ASC;"
+        let querySQL = "SELECT id, name, description, price, imageName FROM menu_items ORDER BY name ASC;"
         var statement: OpaquePointer?
-        var result: [Flower] = []
+        var result: [MenuItem] = []
         
         if sqlite3_prepare_v2(db, querySQL, -1, &statement, nil) == SQLITE_OK {
             while sqlite3_step(statement) == SQLITE_ROW {
@@ -112,12 +111,12 @@ final class DatabaseManager {
                     imageName = String(cString: cString)
                 }
                 
-                let flower = Flower(id: id,
+                let item = MenuItem(id: id,
                                     name: name,
                                     description: description,
                                     price: price,
                                     imageName: imageName)
-                result.append(flower)
+                result.append(item)
             }
         } else {
             print("SELECT statement could not be prepared.")
@@ -128,10 +127,10 @@ final class DatabaseManager {
     }
     
     @discardableResult
-    func insertFlower(name: String, description: String, price: Double, imageName: String) -> Int64? {
+    func insertMenuItem(name: String, description: String, price: Double, imageName: String) -> Int64? {
         guard let db = db else { return nil }
         
-        let insertSQL = "INSERT INTO flowers (name, description, price, imageName) VALUES (?, ?, ?, ?);"
+        let insertSQL = "INSERT INTO menu_items (name, description, price, imageName) VALUES (?, ?, ?, ?);"
         var statement: OpaquePointer?
         
         if sqlite3_prepare_v2(db, insertSQL, -1, &statement, nil) == SQLITE_OK {
@@ -156,21 +155,3 @@ final class DatabaseManager {
         return lastId
     }
 }
-
-// MARK: - Controller / Repository facade
-
-final class FlowerController: ObservableObject {
-    @Published private(set) var flowers: [Flower] = []
-    
-    private let db = DatabaseManager.shared
-    
-    init() {
-        loadFlowers()
-    }
-    
-    func loadFlowers() {
-        flowers = db.fetchFlowers()
-    }
-}
-
-
