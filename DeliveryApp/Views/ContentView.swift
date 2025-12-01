@@ -5,10 +5,11 @@
 //  Created by raven on 11/18/25.
 //
 
-import SwiftUI
+internal import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var menuController: MenuController
+    @EnvironmentObject private var cartController: CartController
     
     var body: some View {
         NavigationStack {
@@ -27,18 +28,42 @@ struct ContentView: View {
                             }
                             .listRowSeparator(.hidden)
                         }
+                        .onDelete { offsets in
+                            menuController.deleteMenuItems(at: offsets)
+                        }
                     }
                     .listStyle(.plain)
                 }
             }
             .navigationTitle("Local Eats")
             .toolbar {
-                Button {
-                    menuController.loadMenu()
-                } label: {
-                    Image(systemName: "arrow.clockwise")
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button {
+                        menuController.loadMenu()
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .accessibilityLabel("Refresh menu")
+                    
+                    NavigationLink {
+                        CartView()
+                            .environmentObject(cartController)
+                    } label: {
+                        ZStack(alignment: .topTrailing) {
+                            Image(systemName: "cart")
+                            
+                            if cartController.totalItems > 0 {
+                                Text("\(cartController.totalItems)")
+                                    .font(.caption2.bold())
+                                    .foregroundStyle(.white)
+                                    .padding(4)
+                                    .background(Circle().fill(.red))
+                                    .offset(x: 8, y: -8)
+                            }
+                        }
+                    }
+                    .accessibilityLabel("View cart")
                 }
-                .accessibilityLabel("Refresh menu")
             }
         }
     }
@@ -78,6 +103,7 @@ private struct MenuRow: View {
 
 private struct MenuDetailView: View {
     let item: MenuItem
+    @EnvironmentObject private var cartController: CartController
     
     var body: some View {
         ScrollView {
@@ -99,6 +125,17 @@ private struct MenuDetailView: View {
                         .foregroundStyle(.secondary)
                     Text(item.price, format: .currency(code: "USD"))
                         .font(.title2.bold())
+                    
+                    Button {
+                        cartController.addToCart(item)
+                    } label: {
+                        Text("Add to Cart")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+                    .padding(.top, 16)
                 }
             }
             .padding()
@@ -108,7 +145,80 @@ private struct MenuDetailView: View {
     }
 }
 
+struct CartView: View {
+    @EnvironmentObject private var cartController: CartController
+    
+    var body: some View {
+        Group {
+            if cartController.items.isEmpty {
+                ContentUnavailableView("Cart is empty",
+                                       systemImage: "cart",
+                                       description: Text("Add some tasty dishes to your cart to get started."))
+            } else {
+                List {
+                    ForEach(cartController.items) { cartItem in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(cartItem.item.name)
+                                    .font(.headline)
+                                Text(cartItem.item.price, format: .currency(code: "USD"))
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            VStack(alignment: .trailing, spacing: 4) {
+                                Text(Double(cartItem.quantity) * cartItem.item.price, format: .currency(code: "USD"))
+                                    .font(.headline)
+                                
+                                Stepper(
+                                    "Qty: \(cartItem.quantity)",
+                                    value: .init(
+                                        get: { cartItem.quantity },
+                                        set: { newValue in
+                                            cartController.updateQuantity(for: cartItem.item, quantity: newValue)
+                                        }
+                                    ),
+                                    in: 1...20
+                                )
+                                .labelsHidden()
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .onDelete { offsets in
+                        cartController.removeItems(at: offsets)
+                    }
+                    
+                    Section {
+                        HStack {
+                            Text("Total")
+                                .font(.headline)
+                            Spacer()
+                            Text(cartController.totalPrice, format: .currency(code: "USD"))
+                                .font(.headline)
+                        }
+                    }
+                }
+                .listStyle(.insetGrouped)
+            }
+        }
+        .navigationTitle("Your Cart")
+        .toolbar {
+            if !cartController.items.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Clear") {
+                        cartController.clearCart()
+                    }
+                }
+            }
+        }
+    }
+}
+
 #Preview {
     ContentView()
         .environmentObject(MenuController())
+        .environmentObject(CartController())
 }

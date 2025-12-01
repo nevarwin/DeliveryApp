@@ -5,16 +5,18 @@
 //  Created by raven on 11/18/25.
 //
 
-import SwiftUI
+internal import SwiftUI
 
 @main
 struct DeliveryAppApp: App {
     @StateObject private var menuController = MenuController()
+    @StateObject private var cartController = CartController()
     
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(menuController)
+                .environmentObject(cartController)
         }
     }
 }

@@ -154,4 +154,56 @@ final class DatabaseManager {
         sqlite3_finalize(statement)
         return lastId
     }
+
+    func updateMenuItem(_ item: MenuItem) -> Bool {
+        guard let db = db else { return false }
+        
+        let updateSQL = "UPDATE menu_items SET name = ?, description = ?, price = ?, imageName = ? WHERE id = ?;"
+        var statement: OpaquePointer?
+        
+        if sqlite3_prepare_v2(db, updateSQL, -1, &statement, nil) == SQLITE_OK {
+            sqlite3_bind_text(statement, 1, (item.name as NSString).utf8String, -1, nil)
+            sqlite3_bind_text(statement, 2, (item.description as NSString).utf8String, -1, nil)
+            sqlite3_bind_double(statement, 3, item.price)
+            sqlite3_bind_text(statement, 4, (item.imageName as NSString).utf8String, -1, nil)
+            sqlite3_bind_int64(statement, 5, item.id)
+            
+            if sqlite3_step(statement) != SQLITE_DONE {
+                print("Could not update row.")
+                sqlite3_finalize(statement)
+                return false
+            }
+        } else {
+            print("UPDATE statement could not be prepared.")
+            sqlite3_finalize(statement)
+            return false
+        }
+        
+        sqlite3_finalize(statement)
+        return true
+    }
+    
+    func deleteMenuItem(id: Int64) -> Bool {
+        guard let db = db else { return false }
+        
+        let deleteSQL = "DELETE FROM menu_items WHERE id = ?;"
+        var statement: OpaquePointer?
+        
+        if sqlite3_prepare_v2(db, deleteSQL, -1, &statement, nil) == SQLITE_OK {
+            sqlite3_bind_int64(statement, 1, id)
+            
+            if sqlite3_step(statement) != SQLITE_DONE {
+                print("Could not delete row.")
+                sqlite3_finalize(statement)
+                return false
+            }
+        } else {
+            print("DELETE statement could not be prepared.")
+            sqlite3_finalize(statement)
+            return false
+        }
+        
+        sqlite3_finalize(statement)
+        return true
+    }
 }

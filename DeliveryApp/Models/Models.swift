@@ -15,4 +15,10 @@ struct MenuItem: Identifiable, Equatable {
     var imageName: String
 }
 
+struct CartItem: Identifiable {
+    let id = UUID()
+    var item: MenuItem
+    var quantity: Int
+}
+
 
