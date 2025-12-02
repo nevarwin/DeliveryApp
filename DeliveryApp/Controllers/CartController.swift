@@ -7,7 +7,6 @@
 
 import Foundation
 import Combine
-internal import SwiftUI
 
 final class CartController: ObservableObject {
     @Published private(set) var items: [CartItem] = []
