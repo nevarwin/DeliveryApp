@@ -22,20 +22,84 @@ final class DeliveryAppUITests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
+    // MARK: - Happy path smoke test
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testHappyPath_onboardingToCheckout() throws {
         let app = XCUIApplication()
         app.launch()
-
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-    }
-
-    @MainActor
-    func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
+        
+        // NOTE: These are intentionally high-level and resilient.
+        // Adjust identifiers/labels as you refine the UI.
+        
+        // Onboarding
+        if app.buttons["Get Started"].exists {
+            app.buttons["Get Started"].tap()
         }
+        
+        // Login
+        if app.textFields["Email"].exists {
+            app.textFields["Email"].tap()
+            app.textFields["Email"].typeText("test@example.com")
+        }
+        
+        if app.secureTextFields["Password"].exists {
+            app.secureTextFields["Password"].tap()
+            app.secureTextFields["Password"].typeText("password")
+        }
+        
+        if app.buttons["Continue"].exists {
+            app.buttons["Continue"].tap()
+        }
+        
+        // Menu – assume at least one cell exists after load.
+        // TODO: If you add explicit accessibility identifiers, use them here.
+        let firstCell = app.cells.firstMatch
+        if firstCell.waitForExistence(timeout: 5) {
+            firstCell.tap()
+        }
+        
+        // Add to cart from detail
+        if app.buttons["Add to Cart"].waitForExistence(timeout: 2) {
+            app.buttons["Add to Cart"].tap()
+        }
+        
+        // Open cart via cart button in navigation bar.
+        // TODO: Give this button an accessibility identifier if needed.
+        let cartButton = app.buttons["View cart"]
+        if cartButton.waitForExistence(timeout: 2) {
+            cartButton.tap()
+        }
+        
+        // Proceed to checkout
+        let checkoutCell = app.staticTexts["Proceed to Checkout"]
+        if checkoutCell.waitForExistence(timeout: 2) {
+            checkoutCell.tap()
+        }
+        
+        // Fill minimal checkout fields (actual validation TBD).
+        let fullNameField = app.textFields["Full name"]
+        if fullNameField.waitForExistence(timeout: 2) {
+            fullNameField.tap()
+            fullNameField.typeText("Test User")
+        }
+        
+        let addressField = app.textFields["Street address"]
+        if addressField.exists {
+            addressField.tap()
+            addressField.typeText("123 Test Street")
+        }
+        
+        let cityField = app.textFields["City"]
+        if cityField.exists {
+            cityField.tap()
+            cityField.typeText("Testville")
+        }
+        
+        let placeOrderButton = app.buttons["Place Order"]
+        if placeOrderButton.waitForExistence(timeout: 2) {
+            placeOrderButton.tap()
+        }
+        
+        // TODO: Once `CheckoutController` sets `showConfirmation`, assert on the alert or next screen.
     }
 }
