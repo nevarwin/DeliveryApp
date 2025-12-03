@@ -5,7 +5,7 @@
 //  Simple onboarding and login screens.
 //
 
-import SwiftUI
+internal import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject private var appState: AppStateController

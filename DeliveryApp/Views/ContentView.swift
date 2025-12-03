@@ -200,6 +200,20 @@ struct CartView: View {
                                 .font(.headline)
                         }
                     }
+                    
+                    Section {
+                        NavigationLink {
+                            CheckoutView()
+                                .environmentObject(cartController)
+                        } label: {
+                            HStack {
+                                Spacer()
+                                Text("Proceed to Checkout")
+                                    .font(.headline)
+                                Spacer()
+                            }
+                        }
+                    }
                 }
                 .listStyle(.insetGrouped)
             }
@@ -215,10 +229,9 @@ struct CartView: View {
             }
         }
     }
-}
-
-#Preview {
-    ContentView()
-        .environmentObject(MenuController())
-        .environmentObject(CartController())
+    #Preview {
+        ContentView()
+            .environmentObject(MenuController())
+            .environmentObject(CartController())
+    }
 }
