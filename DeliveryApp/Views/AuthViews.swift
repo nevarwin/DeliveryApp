@@ -5,16 +5,16 @@
 //  Simple onboarding and login screens.
 //
 
-internal import SwiftUI
+import SwiftUI
 
 struct RootView: View {
-    @EnvironmentObject private var appState: AppStateController
+    @EnvironmentObject private var appViewModel: AppViewModel
     
     var body: some View {
         Group {
-            if !appState.isOnboarded {
+            if !appViewModel.isOnboarded {
                 OnboardingView()
-            } else if !appState.isLoggedIn {
+            } else if !appViewModel.isLoggedIn {
                 LoginView()
             } else {
                 ContentView()
@@ -24,7 +24,7 @@ struct RootView: View {
 }
 
 struct OnboardingView: View {
-    @EnvironmentObject private var appState: AppStateController
+    @EnvironmentObject private var appViewModel: AppViewModel
     
     var body: some View {
         VStack(spacing: 24) {
@@ -49,7 +49,7 @@ struct OnboardingView: View {
             Spacer()
             
             Button {
-                appState.isOnboarded = true
+                appViewModel.completeOnboarding()
             } label: {
                 Text("Get Started")
                     .font(.headline)
@@ -64,7 +64,7 @@ struct OnboardingView: View {
 }
 
 struct LoginView: View {
-    @EnvironmentObject private var appState: AppStateController
+    @EnvironmentObject private var appViewModel: AppViewModel
     
     @State private var email: String = ""
     @State private var password: String = ""
@@ -90,8 +90,7 @@ struct LoginView: View {
             .padding(.horizontal)
             
             Button {
-                // Simple demo login – in a real app you'd validate credentials.
-                appState.isLoggedIn = true
+                appViewModel.login(email: email, password: password)
             } label: {
                 Text("Continue")
                     .font(.headline)

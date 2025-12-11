@@ -2,25 +2,25 @@
 //  ContentView.swift
 //  DeliveryApp
 //
-//  Created by raven on 11/18/25.
+//  Menu screen wired to MenuViewModel + CartViewModel.
 //
 
-internal import SwiftUI
+import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject private var menuController: MenuController
-    @EnvironmentObject private var cartController: CartController
+    @EnvironmentObject private var menuViewModel: MenuViewModel
+    @EnvironmentObject private var cartViewModel: CartViewModel
     
     var body: some View {
         NavigationStack {
             Group {
-                if menuController.menuItems.isEmpty {
+                if menuViewModel.menuItems.isEmpty {
                     ContentUnavailableView("No dishes yet",
                                            systemImage: "takeoutbag.and.cup.and.straw.fill",
                                            description: Text("Pull to refresh to load the house specials."))
                 } else {
                     List {
-                        ForEach(menuController.menuItems) { item in
+                        ForEach(menuViewModel.menuItems) { item in
                             NavigationLink {
                                 MenuDetailView(item: item)
                             } label: {
@@ -29,7 +29,7 @@ struct ContentView: View {
                             .listRowSeparator(.hidden)
                         }
                         .onDelete { offsets in
-                            menuController.deleteMenuItems(at: offsets)
+                            menuViewModel.deleteMenuItems(at: offsets)
                         }
                     }
                     .listStyle(.plain)
@@ -39,7 +39,7 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Button {
-                        menuController.loadMenu()
+                        Task { await menuViewModel.loadMenu() }
                     } label: {
                         Image(systemName: "arrow.clockwise")
                     }
@@ -47,13 +47,13 @@ struct ContentView: View {
                     
                     NavigationLink {
                         CartView()
-                            .environmentObject(cartController)
+                            .environmentObject(cartViewModel)
                     } label: {
                         ZStack(alignment: .topTrailing) {
                             Image(systemName: "cart")
                             
-                            if cartController.totalItems > 0 {
-                                Text("\(cartController.totalItems)")
+                            if cartViewModel.totalItems > 0 {
+                                Text("\(cartViewModel.totalItems)")
                                     .font(.caption2.bold())
                                     .foregroundStyle(.white)
                                     .padding(4)
@@ -103,7 +103,7 @@ private struct MenuRow: View {
 
 private struct MenuDetailView: View {
     let item: MenuItem
-    @EnvironmentObject private var cartController: CartController
+    @EnvironmentObject private var cartViewModel: CartViewModel
     
     var body: some View {
         ScrollView {
@@ -127,7 +127,7 @@ private struct MenuDetailView: View {
                         .font(.title2.bold())
                     
                     Button {
-                        cartController.addToCart(item)
+                        cartViewModel.addToCart(item)
                     } label: {
                         Text("Add to Cart")
                             .font(.headline)
@@ -146,17 +146,17 @@ private struct MenuDetailView: View {
 }
 
 struct CartView: View {
-    @EnvironmentObject private var cartController: CartController
+    @EnvironmentObject private var cartViewModel: CartViewModel
     
     var body: some View {
         Group {
-            if cartController.items.isEmpty {
+            if cartViewModel.items.isEmpty {
                 ContentUnavailableView("Cart is empty",
                                        systemImage: "cart",
                                        description: Text("Add some tasty dishes to your cart to get started."))
             } else {
                 List {
-                    ForEach(cartController.items) { cartItem in
+                    ForEach(cartViewModel.items) { cartItem in
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(cartItem.item.name)
@@ -177,7 +177,7 @@ struct CartView: View {
                                     value: .init(
                                         get: { cartItem.quantity },
                                         set: { newValue in
-                                            cartController.updateQuantity(for: cartItem.item, quantity: newValue)
+                                                cartViewModel.updateQuantity(for: cartItem.item, quantity: newValue)
                                         }
                                     ),
                                     in: 1...20
@@ -188,7 +188,7 @@ struct CartView: View {
                         .padding(.vertical, 4)
                     }
                     .onDelete { offsets in
-                        cartController.removeItems(at: offsets)
+                        cartViewModel.removeItems(at: offsets)
                     }
                     
                     Section {
@@ -196,7 +196,7 @@ struct CartView: View {
                             Text("Total")
                                 .font(.headline)
                             Spacer()
-                            Text(cartController.totalPrice, format: .currency(code: "USD"))
+                            Text(cartViewModel.totalPrice, format: .currency(code: "USD"))
                                 .font(.headline)
                         }
                     }
@@ -204,7 +204,7 @@ struct CartView: View {
                     Section {
                         NavigationLink {
                             CheckoutView()
-                                .environmentObject(cartController)
+                                .environmentObject(cartViewModel)
                         } label: {
                             HStack {
                                 Spacer()
@@ -220,10 +220,10 @@ struct CartView: View {
         }
         .navigationTitle("Your Cart")
         .toolbar {
-            if !cartController.items.isEmpty {
+            if !cartViewModel.items.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Clear") {
-                        cartController.clearCart()
+                        cartViewModel.clearCart()
                     }
                 }
             }
@@ -231,7 +231,7 @@ struct CartView: View {
     }
     #Preview {
         ContentView()
-            .environmentObject(MenuController())
-            .environmentObject(CartController())
+            .environmentObject(MenuViewModel())
+            .environmentObject(CartViewModel())
     }
 }

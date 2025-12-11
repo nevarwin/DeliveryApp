@@ -2,23 +2,23 @@
 //  DeliveryAppApp.swift
 //  DeliveryApp
 //
-//  Created by raven on 11/18/25.
+//  Entry point that wires up shared view models for MVVM.
 //
 
-internal import SwiftUI
+import SwiftUI
 
 @main
 struct DeliveryAppApp: App {
-    @StateObject private var appState = AppStateController()
-    @StateObject private var menuController = MenuController()
-    @StateObject private var cartController = CartController()
+    @StateObject private var appViewModel = AppViewModel()
+    @StateObject private var menuViewModel = MenuViewModel()
+    @StateObject private var cartViewModel = CartViewModel()
     
     var body: some Scene {
         WindowGroup {
             RootView()
-                .environmentObject(appState)
-                .environmentObject(menuController)
-                .environmentObject(cartController)
+                .environmentObject(appViewModel)
+                .environmentObject(menuViewModel)
+                .environmentObject(cartViewModel)
         }
     }
 }

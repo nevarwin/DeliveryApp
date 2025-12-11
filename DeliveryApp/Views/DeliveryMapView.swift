@@ -7,7 +7,7 @@
 //  selected location back into your checkout flow.
 //
 
-internal import SwiftUI
+import SwiftUI
 
 struct DeliveryMapView: View {
     // TODO: Inject any dependencies you need (e.g. a map view model, current address, etc.)

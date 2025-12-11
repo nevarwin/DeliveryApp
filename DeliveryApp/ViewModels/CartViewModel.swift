@@ -1,15 +1,15 @@
 //
-//  CartController.swift
+//  CartViewModel.swift
 //  DeliveryApp
 //
-//  ObservableObject that manages items added to the cart.
+//  MVVM view model that tracks cart state.
 //
 
-import Foundation
-import Combine
-internal import SwiftUI
+import SwiftUI
+internal import Combine
 
-final class CartController: ObservableObject {
+@MainActor
+final class CartViewModel: ObservableObject {
     @Published private(set) var items: [CartItem] = []
     
     var totalItems: Int {
@@ -47,5 +47,3 @@ final class CartController: ObservableObject {
         items.removeAll()
     }
 }
-
-

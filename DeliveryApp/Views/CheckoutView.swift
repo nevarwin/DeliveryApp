@@ -2,43 +2,40 @@
 //  CheckoutView.swift
 //  DeliveryApp
 //
-//  Skeleton SwiftUI checkout screen that uses `CheckoutViewModel`.
-//  All business logic lives in the view model; this file is UI‑only.
+//  SwiftUI checkout screen that reads from CheckoutViewModel.
 //
 
-internal import SwiftUI
+import SwiftUI
 
 struct CheckoutView: View {
-    @EnvironmentObject private var cartController: CartController
+    @EnvironmentObject private var cartViewModel: CartViewModel
     @Environment(\.dismiss) private var dismiss
     
-    // MVC-style: the view owns its controller for this flow.
-    @StateObject private var controller = CheckoutController()
+    @StateObject private var viewModel = CheckoutViewModel()
     
     var body: some View {
         Form {
             // MARK: Delivery details
             Section("Delivery details") {
-                TextField("Full name", text: $controller.name)
-                TextField("Street address", text: $controller.addressLine1)
-                TextField("Apartment, suite, etc. (optional)", text: $controller.addressLine2)
-                TextField("City", text: $controller.city)
+                TextField("Full name", text: $viewModel.name)
+                TextField("Street address", text: $viewModel.addressLine1)
+                TextField("Apartment, suite, etc. (optional)", text: $viewModel.addressLine2)
+                TextField("City", text: $viewModel.city)
                 
-                TextField("Delivery instructions (optional)", text: $controller.instructions, axis: .vertical)
+                TextField("Delivery instructions (optional)", text: $viewModel.instructions, axis: .vertical)
                     .lineLimit(2...4)
             }
             
             // MARK: Payment method
             Section("Payment") {
-                Picker("Method", selection: $controller.selectedPaymentMethod) {
+                Picker("Method", selection: $viewModel.selectedPaymentMethod) {
                     ForEach(PaymentMethod.allCases, id: \.self) { method in
                         Text(method.displayName).tag(method)
                     }
                 }
                 .pickerStyle(.segmented)
                 
-                // Skeleton explanatory text – replace with your real integration notes.
-                switch controller.selectedPaymentMethod {
+                switch viewModel.selectedPaymentMethod {
                 case .applePay:
                     Text("TODO: Present Apple Pay sheet here.")
                         .font(.footnote)
@@ -52,7 +49,7 @@ struct CheckoutView: View {
             
             // MARK: Order summary
             Section("Order summary") {
-                ForEach(cartController.items) { cartItem in
+                ForEach(cartViewModel.items) { cartItem in
                     HStack {
                         Text("\(cartItem.quantity)x \(cartItem.item.name)")
                         Spacer()
@@ -64,7 +61,7 @@ struct CheckoutView: View {
                     Text("Total")
                         .font(.headline)
                     Spacer()
-                    Text(cartController.totalPrice, format: .currency(code: "USD"))
+                    Text(cartViewModel.totalPrice, format: .currency(code: "USD"))
                         .font(.headline)
                 }
             }
@@ -90,14 +87,13 @@ struct CheckoutView: View {
             Section {
                 Button {
                     Task {
-                        await controller.placeOrder(using: cartController)
-                        // TODO: You decide how / when to dismiss or navigate after success.
-                        if controller.showConfirmation {
+                        await viewModel.placeOrder(using: cartViewModel)
+                        if viewModel.showConfirmation {
                             dismiss()
                         }
                     }
                 } label: {
-                    if controller.isProcessingPayment {
+                    if viewModel.isProcessingPayment {
                         HStack {
                             Spacer()
                             ProgressView()
@@ -112,12 +108,12 @@ struct CheckoutView: View {
                         }
                     }
                 }
-                .disabled(!controller.canPlaceOrder || controller.isProcessingPayment)
+                .disabled(!viewModel.canPlaceOrder || viewModel.isProcessingPayment)
             }
         }
         .navigationTitle("Checkout")
         .navigationBarTitleDisplayMode(.inline)
-        .alert("Order confirmed!", isPresented: $controller.showConfirmation) {
+        .alert("Order confirmed!", isPresented: $viewModel.showConfirmation) {
             Button("OK") {
                 dismiss()
             }
@@ -126,5 +122,4 @@ struct CheckoutView: View {
         }
     }
 }
-
 
