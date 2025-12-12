@@ -9,16 +9,13 @@ import SwiftUI
 
 @main
 struct DeliveryAppApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appViewModel = AppViewModel()
-    @StateObject private var menuViewModel = MenuViewModel()
-    @StateObject private var cartViewModel = CartViewModel()
     
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(appViewModel)
-                .environmentObject(menuViewModel)
-                .environmentObject(cartViewModel)
         }
     }
 }
