@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		9713969D2EF1B27900CDA48E /* Base.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 9713969C2EF1B27900CDA48E /* Base.xcconfig */; };
+		971396A22EF1B93B00CDA48E /* Base.xcconfig.example in Resources */ = {isa = PBXBuildFile; fileRef = 971396A12EF1B93B00CDA48E /* Base.xcconfig.example */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,6 +30,7 @@
 
 /* Begin PBXFileReference section */
 		9713969C2EF1B27900CDA48E /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		971396A12EF1B93B00CDA48E /* Base.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig.example; sourceTree = "<group>"; };
 		973B07A92ECCB8E100B574FD /* DeliveryApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DeliveryApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		973B07B62ECCB8E300B574FD /* DeliveryAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DeliveryAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		973B07C02ECCB8E300B574FD /* DeliveryAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DeliveryAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -81,6 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				9713969C2EF1B27900CDA48E /* Base.xcconfig */,
+				971396A12EF1B93B00CDA48E /* Base.xcconfig.example */,
 				973B07AB2ECCB8E100B574FD /* DeliveryApp */,
 				973B07B92ECCB8E300B574FD /* DeliveryAppTests */,
 				973B07C32ECCB8E300B574FD /* DeliveryAppUITests */,
@@ -222,6 +225,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9713969D2EF1B27900CDA48E /* Base.xcconfig in Resources */,
+				971396A22EF1B93B00CDA48E /* Base.xcconfig.example in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
