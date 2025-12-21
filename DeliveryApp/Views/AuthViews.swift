@@ -77,6 +77,12 @@ struct LoginView: View {
                 .font(.largeTitle.bold())
             
             VStack(spacing: 16) {
+                if let error = appViewModel.errorMessage {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+                
                 TextField("Email", text: $email)
                     .textContentType(.emailAddress)
                     .keyboardType(.emailAddress)
@@ -90,14 +96,22 @@ struct LoginView: View {
             .padding(.horizontal)
             
             Button {
-                appViewModel.login(email: email, password: password)
+                appViewModel.signInWithGoogle()
             } label: {
-                Text("Continue")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
+                HStack {
+                    Image(systemName: "g.circle.fill")
+                    Text("Sign in with Google")
+                        .font(.headline)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.white)
+                .foregroundColor(.black)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                )
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.orange)
             .padding(.horizontal)
             
             Spacer()

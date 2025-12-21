@@ -9,3 +9,5 @@
 // https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project
 
 FIREBASE_API_KEY =
+REVERSED_CLIENT_ID =
+CLIENT_ID =
