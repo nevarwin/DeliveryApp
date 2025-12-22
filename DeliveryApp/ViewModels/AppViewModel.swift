@@ -50,15 +50,45 @@ final class AppViewModel: ObservableObject {
         isOnboarded = true
     }
     
-    func login(email: String, password: String) {
-        guard !email.isEmpty, !password.isEmpty else { return }
-        
-        Auth.auth().signIn(withEmail: email, password: password){ [weak self] authResult, error in
+    func authenticate(email: String, password: String) {
+        guard !email.isEmpty, !password.isEmpty else {
+            self.errorMessage = "Please enter an email and password."
+            return
+        }
+
+        // 1. Always attempt Sign In first
+        Auth.auth().signIn(withEmail: email, password: password) { [weak self] authResult, error in
+            if let error = error as NSError? {
+                
+                self?.attemptSignUp(email: email, password: password, originalError: error)
+                return
+            }
+            
+            // Success: User logged in
             DispatchQueue.main.async {
-                if let error = error {
-                    self?.errorMessage = error.localizedDescription
+                self?.isLoggedIn = true
+            }
+        }
+    }
+
+    private func attemptSignUp(email: String, password: String, originalError: NSError) {
+        Auth.auth().createUser(withEmail: email, password: password) { [weak self] authResult, error in
+            DispatchQueue.main.async {
+                if let error = error as NSError? {
+                    print(error)
+
+                    if error.code == AuthErrorCode.emailAlreadyInUse.rawValue {
+                        self?.errorMessage = "Incorrect password for this account."
+                    } else if error.code == AuthErrorCode.invalidCredential.rawValue {
+                        self?.errorMessage = "Invalid email or password. Please check your details."
+                    } else {
+                        print("else")
+                        self?.errorMessage = error.localizedDescription
+                    }
                     return
                 }
+                
+                // Success: Account created and logged in
                 self?.isLoggedIn = true
             }
         }

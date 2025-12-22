@@ -92,9 +92,39 @@ struct LoginView: View {
                 SecureField("Password", text: $password)
                     .textContentType(.password)
                     .textFieldStyle(.roundedBorder)
+                
+                // Sign In Button for Email/Password
+                Button {
+                     appViewModel.authenticate(email: email, password: password)
+                } label: {
+                    Text("Sign In")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.orange)
+                        .cornerRadius(8)
+                }
             }
             .padding(.horizontal)
             
+            // Horizontal Line Spacer (Separator)
+            HStack {
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundStyle(.gray.opacity(0.3))
+                
+                Text("OR")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .fontWeight(.bold)
+                
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundStyle(.gray.opacity(0.3))
+            }
+            .padding(.horizontal)
+
             Button {
                 appViewModel.signInWithGoogle()
             } label: {
@@ -118,5 +148,4 @@ struct LoginView: View {
         }
     }
 }
-
 

@@ -137,6 +137,7 @@
 			buildPhases = (
 				973B07A52ECCB8E100B574FD /* Sources */,
 				973B07A62ECCB8E100B574FD /* Frameworks */,
+				9748A68F2EF9850200BC4A9B /* ShellScript */,
 				973B07A72ECCB8E100B574FD /* Resources */,
 			);
 			buildRules = (
@@ -275,6 +276,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		9748A68F2EF9850200BC4A9B /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Define the path to your Info.plist\n# Adjust the path below if your plist is in a subfolder (e.g., \"${SRCROOT}/App/GoogleService-Info.plist\")\nPLIST_PATH=\"${SRCROOT}/DeliveryApp/GoogleService-Info.plist\"\n\nif [ -f \"$PLIST_PATH\" ]; then\n    echo \"Found GoogleService-Info.plist at $PLIST_PATH\"\n    \n    # Check if the variable from .xcconfig exists\n    if [ -z \"${FIREBASE_API_KEY}\" ]; then\n        echo \"Error: FIREBASE_API_KEY not found in .xcconfig\"\n        exit 1\n    fi\n\n    # Inject the key using PlistBuddy\n    /usr/libexec/PlistBuddy -c \"Set :API_KEY ${FIREBASE_API_KEY}\" \"$PLIST_PATH\"\n    echo \"Successfully injected FIREBASE_API_KEY\"\nelse\n    echo \"Error: GoogleService-Info.plist not found at $PLIST_PATH\"\n    exit 1\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		973B07A52ECCB8E100B574FD /* Sources */ = {
@@ -601,7 +622,7 @@
 				973B07C92ECCB8E300B574FD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		973B07CA2ECCB8E300B574FD /* Build configuration list for PBXNativeTarget "DeliveryApp" */ = {
 			isa = XCConfigurationList;
@@ -610,7 +631,7 @@
 				973B07CC2ECCB8E300B574FD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		973B07CD2ECCB8E300B574FD /* Build configuration list for PBXNativeTarget "DeliveryAppTests" */ = {
 			isa = XCConfigurationList;
@@ -619,7 +640,7 @@
 				973B07CF2ECCB8E300B574FD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		973B07D02ECCB8E300B574FD /* Build configuration list for PBXNativeTarget "DeliveryAppUITests" */ = {
 			isa = XCConfigurationList;
@@ -628,7 +649,7 @@
 				973B07D22ECCB8E300B574FD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 

@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  DeliveryApp
 //
-//  Menu screen wired to MenuViewModel + CartViewModel.
+//
 //
 
 import SwiftUI
@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject private var menuViewModel: MenuViewModel
     @EnvironmentObject private var cartViewModel: CartViewModel
+    @EnvironmentObject private var authViewModel: AppViewModel
     
     var body: some View {
         NavigationStack {
@@ -37,6 +38,14 @@ struct ContentView: View {
             }
             .navigationTitle("Local Eats")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(role: .destructive) {
+                        authViewModel.logout()
+                    } label: {
+                        Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
+                    }
+                }
+            
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Button {
                         Task { await menuViewModel.loadMenu() }
