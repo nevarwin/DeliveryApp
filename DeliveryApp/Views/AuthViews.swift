@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AuthenticationServices
 
 struct RootView: View {
     @EnvironmentObject private var appViewModel: AppViewModel
@@ -65,6 +66,7 @@ struct OnboardingView: View {
 
 struct LoginView: View {
     @EnvironmentObject private var appViewModel: AppViewModel
+    @Environment(\.colorScheme) var colorScheme
     
     @State private var email: String = ""
     @State private var password: String = ""
@@ -93,7 +95,6 @@ struct LoginView: View {
                     .textContentType(.password)
                     .textFieldStyle(.roundedBorder)
                 
-                // Sign In Button for Email/Password
                 Button {
                      appViewModel.authenticate(email: email, password: password)
                 } label: {
@@ -108,39 +109,44 @@ struct LoginView: View {
             }
             .padding(.horizontal)
             
-            // Horizontal Line Spacer (Separator)
             HStack {
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundStyle(.gray.opacity(0.3))
-                
-                Text("OR")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .fontWeight(.bold)
-                
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundStyle(.gray.opacity(0.3))
+                Rectangle().frame(height: 1).foregroundStyle(.gray.opacity(0.3))
+                Text("OR").font(.caption2).foregroundStyle(.secondary).fontWeight(.bold)
+                Rectangle().frame(height: 1).foregroundStyle(.gray.opacity(0.3))
             }
             .padding(.horizontal)
 
-            Button {
-                appViewModel.signInWithGoogle()
-            } label: {
-                HStack {
-                    Image(systemName: "g.circle.fill")
-                    Text("Sign in with Google")
-                        .font(.headline)
+            VStack(spacing: 12) {
+                // Google Sign In (Custom)
+                Button {
+                    appViewModel.signInWithGoogle()
+                } label: {
+                    HStack {
+                        Image(systemName: "g.circle.fill")
+                        Text("Sign in with Google")
+                            .font(.headline)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.white)
+                    .foregroundColor(.black)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                    )
                 }
+                
+                SignInWithAppleButton(.signIn) { request in
+                    // ViewModel to prepare the nonce
+                    appViewModel.prepareAppleRequest(request)
+                } onCompletion: { result in
+                    // Pass the result back to the ViewModel
+                    appViewModel.handleAppleSignInResult(result)
+                }
+                .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
                 .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.white)
-                .foregroundColor(.black)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                )
+                .frame(height: 50)
+                .cornerRadius(8)
             }
             .padding(.horizontal)
             
@@ -148,4 +154,3 @@ struct LoginView: View {
         }
     }
 }
-

@@ -7,7 +7,7 @@
 	<key>REVERSED_CLIENT_ID</key>
 	<string>${REVERSED_CLIENT_ID}</string>
 	<key>API_KEY</key>
-	<string>${FIREBASE_API_KEY}</string>
+	<string>AIzaSyD24kCfUKVOpGxzLw2PSIW_yNgihoBC9oY</string>
 	<key>GCM_SENDER_ID</key>
 	<string>700980667938</string>
 	<key>PLIST_VERSION</key>
