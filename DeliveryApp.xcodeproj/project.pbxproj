@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		9713969D2EF1B27900CDA48E /* Base.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 9713969C2EF1B27900CDA48E /* Base.xcconfig */; };
 		971396A22EF1B93B00CDA48E /* Base.xcconfig.example in Resources */ = {isa = PBXBuildFile; fileRef = 971396A12EF1B93B00CDA48E /* Base.xcconfig.example */; };
 		97E67A5F2EF83CAE00164F88 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 97E67A5E2EF83CAE00164F88 /* GoogleSignIn */; };
 		97F4CF842EF1BA4F00EB0FBA /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 97F4CF832EF1BA4F00EB0FBA /* FirebaseCore */; };
@@ -137,8 +136,8 @@
 			buildPhases = (
 				973B07A52ECCB8E100B574FD /* Sources */,
 				973B07A62ECCB8E100B574FD /* Frameworks */,
-				9748A68F2EF9850200BC4A9B /* ShellScript */,
 				973B07A72ECCB8E100B574FD /* Resources */,
+				9748A68F2EF9850200BC4A9B /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -211,7 +210,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2610;
-				LastUpgradeCheck = 2610;
+				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					973B07A82ECCB8E100B574FD = {
 						CreatedOnToolsVersion = 26.1;
@@ -256,7 +255,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9713969D2EF1B27900CDA48E /* Base.xcconfig in Resources */,
 				971396A22EF1B93B00CDA48E /* Base.xcconfig.example in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -280,6 +278,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		9748A68F2EF9850200BC4A9B /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -293,7 +292,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Define the path to your Info.plist\n# Adjust the path below if your plist is in a subfolder (e.g., \"${SRCROOT}/App/GoogleService-Info.plist\")\nPLIST_PATH=\"${SRCROOT}/DeliveryApp/GoogleService-Info.plist\"\n\nif [ -f \"$PLIST_PATH\" ]; then\n    echo \"Found GoogleService-Info.plist at $PLIST_PATH\"\n    \n    # Check if the variable from .xcconfig exists\n    if [ -z \"${FIREBASE_API_KEY}\" ]; then\n        echo \"Error: FIREBASE_API_KEY not found in .xcconfig\"\n        exit 1\n    fi\n\n    # Inject the key using PlistBuddy\n    /usr/libexec/PlistBuddy -c \"Set :API_KEY ${FIREBASE_API_KEY}\" \"$PLIST_PATH\"\n    echo \"Successfully injected FIREBASE_API_KEY\"\nelse\n    echo \"Error: GoogleService-Info.plist not found at $PLIST_PATH\"\n    exit 1\nfi\n";
+			shellScript = "PLIST_PATH=\"${SRCROOT}/DeliveryApp/GoogleService-Info.plist\"\n\nif [ -f \"$PLIST_PATH\" ]; then\n    if [ -z \"${FIREBASE_API_KEY}\" ]; then\n        echo \"Error: FIREBASE_API_KEY not found in .xcconfig\"\n        exit 1\n    fi\n\n    # Try to delete the key first so 'Add' doesn't fail if it exists\n    /usr/libexec/PlistBuddy -c \"Delete :API_KEY\" \"$PLIST_PATH\" 2>/dev/null\n    \n    # Add the key back with the new value\n    /usr/libexec/PlistBuddy -c \"Add :API_KEY string ${FIREBASE_API_KEY}\" \"$PLIST_PATH\"\n    \n    echo \"Successfully injected FIREBASE_API_KEY\"\nelse\n    echo \"Error: GoogleService-Info.plist not found at $PLIST_PATH\"\n    exit 1\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -374,7 +373,7 @@
 				DEVELOPMENT_TEAM = VQXG9UW8TD;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -395,6 +394,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -439,7 +439,7 @@
 				DEVELOPMENT_TEAM = VQXG9UW8TD;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -453,6 +453,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
