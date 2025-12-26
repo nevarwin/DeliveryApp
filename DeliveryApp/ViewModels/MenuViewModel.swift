@@ -13,53 +13,58 @@ final class MenuViewModel: ObservableObject {
     
     @Published private(set) var menuItems: [MenuItem] = []
     
-    private let repository: MenuRepository
+    // We use the Singleton directly for consistency
+    private let db = DatabaseManager.shared
     
-    init(repository: MenuRepository) {
-        self.repository = repository
-        // Defer initial load until after initialization completes
-        Task { [weak self] in
-            await self?.loadMenu()
+    init() {
+        // Load local data immediately on startup
+        loadLocalData()
+    }
+    
+    // MARK: - Loading
+    
+    func loadLocalData() {
+        self.menuItems = db.fetchMenuItems()
+    }
+    
+    func refreshData() {
+        // 1. Background Sync
+        db.syncMenuWithFirebase { [weak self] success in
+            if success {
+                // 2. Refresh UI with new data
+                DispatchQueue.main.async {
+                    self?.loadLocalData()
+                }
+            }
         }
     }
     
-    @MainActor
-    convenience init() {
-        self.init(repository: SQLiteMenuRepository())
-    }
+    // MARK: - CRUD
     
-    func loadMenu() async {
-        menuItems = repository.fetchMenuItems()
-    }
-    
-    func createMenuItem(name: String,
-                        description: String,
-                        price: Double,
-                        imageName: String) {
-        repository.createMenuItem(name: name,
-                                  description: description,
-                                  price: price,
-                                  imageName: imageName)
-        Task { [weak self] in
-            await self?.loadMenu()
-        }
+    func createMenuItem(name: String, description: String, price: Double, imageName: String) {
+        // Use the new Manager method that handles BOTH Local + Cloud
+        db.createMenuItem(name: name, description: description, price: price, imageName: imageName)
+        
+        // Reload local array to update UI
+        loadLocalData()
     }
     
     func updateMenuItem(_ item: MenuItem) {
-        repository.updateMenuItem(item)
-        Task { [weak self] in
-            await self?.loadMenu()
-        }
+        // You should add a similar 'update' method to DatabaseManager that handles Firestore
+        db.updateMenuItemComposite(item)
+        loadLocalData()
     }
     
     func deleteMenuItems(at offsets: IndexSet) {
-        let idsToDelete = offsets.compactMap { index in
-            menuItems[safe: index]?.id
+        offsets.forEach { index in
+            guard let item = menuItems[safe: index] else { return }
+            
+            // The Manager now handles both SQLite and Firestore deletion
+            db.deleteMenuItem(localID: item.id, firebaseID: item.firebaseID)
         }
-        repository.deleteMenuItems(ids: idsToDelete)
-        Task { [weak self] in
-            await self?.loadMenu()
-        }
+        
+        // Update UI immediately (Optimistic update)
+        menuItems.remove(atOffsets: offsets)
     }
 }
 

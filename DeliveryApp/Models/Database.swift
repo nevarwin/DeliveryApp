@@ -7,6 +7,7 @@
 
 import Foundation
 import SQLite3
+import FirebaseFirestore
 
 final class DatabaseManager {
     static let shared = DatabaseManager()
@@ -17,6 +18,7 @@ final class DatabaseManager {
     private init() {
         openDatabase()
         createTablesIfNeeded()
+        migrateDatabase()
         seedInitialMenuIfNeeded()
     }
     
@@ -43,6 +45,7 @@ final class DatabaseManager {
         let createMenuTableSQL = """
         CREATE TABLE IF NOT EXISTS menu_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            firebase_id TEXT,
             name TEXT NOT NULL,
             description TEXT,
             price REAL NOT NULL,
@@ -63,6 +66,42 @@ final class DatabaseManager {
         sqlite3_finalize(statement)
     }
     
+    // MARK: - Migration
+    
+    private func migrateDatabase() {
+        guard let db = db else { return }
+        
+        // 1. Check if the column already exists to avoid errors
+        let checkSQL = "PRAGMA table_info(menu_items);"
+        var statement: OpaquePointer?
+        var columnExists = false
+        
+        if sqlite3_prepare_v2(db, checkSQL, -1, &statement, nil) == SQLITE_OK {
+            while sqlite3_step(statement) == SQLITE_ROW {
+                if let name = sqlite3_column_text(statement, 1) {
+                    let columnName = String(cString: name)
+                    if columnName == "firebase_id" {
+                        columnExists = true
+                        break
+                    }
+                }
+            }
+        }
+        sqlite3_finalize(statement)
+        
+        // 2. If it doesn't exist, run the ALTER TABLE command
+        if !columnExists {
+            let alterSQL = "ALTER TABLE menu_items ADD COLUMN firebase_id TEXT;"
+            if sqlite3_exec(db, alterSQL, nil, nil, nil) == SQLITE_OK {
+                print("Successfully migrated: Added firebase_id column.")
+            } else {
+                print("Migration failed: Could not add firebase_id column.")
+            }
+        }
+    }
+    
+    // MARK: - Seeding
+    
     // MARK: - Seeding
     
     private func seedInitialMenuIfNeeded() {
@@ -70,18 +109,19 @@ final class DatabaseManager {
             return
         }
         
-        let initialMenu: [(String, String, Double, String)] = [
-            ("Margherita Pizza", "Wood-fired pie with basil and mozzarella.", 14.99, "takeoutbag.and.cup.and.straw.fill"),
-            ("Sushi Bento", "Chef's choice nigiri with sides.", 22.49, "fish.fill"),
-            ("Vegan Buddha Bowl", "Roasted veggies, quinoa, tahini drizzle.", 17.99, "leaf.circle.fill"),
-            ("BBQ Brisket Sandwich", "Slow-smoked brisket on brioche.", 15.49, "fork.knife.circle")
+        let initialMenu: [(String, String, String, Double, String)] = [
+            ("seed_pizza_01", "Margherita Pizza", "Wood-fired pie with basil and mozzarella.", 14.99, "takeoutbag.and.cup.and.straw.fill"),
+            ("seed_sushi_01", "Sushi Bento", "Chef's choice nigiri with sides.", 22.49, "fish.fill"),
+            ("seed_vegan_01", "Vegan Buddha Bowl", "Roasted veggies, quinoa, tahini drizzle.", 17.99, "leaf.circle.fill"),
+            ("seed_brisket_01", "BBQ Brisket Sandwich", "Slow-smoked brisket on brioche.", 15.49, "fork.knife.circle")
         ]
         
         for item in initialMenu {
-            _ = insertMenuItem(name: item.0,
-                               description: item.1,
-                               price: item.2,
-                               imageName: item.3)
+            _ = insertMenuItem(firebaseID: item.0,
+                               name: item.1,
+                               description: item.2,
+                               price: item.3,
+                               imageName: item.4)
         }
     }
     
@@ -90,7 +130,7 @@ final class DatabaseManager {
     func fetchMenuItems() -> [MenuItem] {
         guard let db = db else { return [] }
         
-        let querySQL = "SELECT id, name, description, price, imageName FROM menu_items ORDER BY name ASC;"
+        let querySQL = "SELECT id, name, description, price, imageName, firebase_id FROM menu_items ORDER BY name ASC;"
         var statement: OpaquePointer?
         var result: [MenuItem] = []
         
@@ -111,7 +151,13 @@ final class DatabaseManager {
                     imageName = String(cString: cString)
                 }
                 
+                var firebaseID = ""
+                if let cString = sqlite3_column_text(statement, 5) {
+                    firebaseID = String(cString: cString)
+                }
+                
                 let item = MenuItem(id: id,
+                                    firebaseID: firebaseID,
                                     name: name,
                                     description: description,
                                     price: price,
@@ -127,17 +173,18 @@ final class DatabaseManager {
     }
     
     @discardableResult
-    func insertMenuItem(name: String, description: String, price: Double, imageName: String) -> Int64? {
+    func insertMenuItem(firebaseID: String, name: String, description: String, price: Double, imageName: String) -> Int64? {
         guard let db = db else { return nil }
         
-        let insertSQL = "INSERT INTO menu_items (name, description, price, imageName) VALUES (?, ?, ?, ?);"
+        let insertSQL = "INSERT INTO menu_items (firebase_id, name, description, price, imageName) VALUES (?, ?, ?, ?);"
         var statement: OpaquePointer?
         
         if sqlite3_prepare_v2(db, insertSQL, -1, &statement, nil) == SQLITE_OK {
-            sqlite3_bind_text(statement, 1, (name as NSString).utf8String, -1, nil)
-            sqlite3_bind_text(statement, 2, (description as NSString).utf8String, -1, nil)
-            sqlite3_bind_double(statement, 3, price)
-            sqlite3_bind_text(statement, 4, (imageName as NSString).utf8String, -1, nil)
+            sqlite3_bind_text(statement, 1, (firebaseID as NSString).utf8String, -1, nil)
+            sqlite3_bind_text(statement, 2, (name as NSString).utf8String, -1, nil)
+            sqlite3_bind_text(statement, 3, (description as NSString).utf8String, -1, nil)
+            sqlite3_bind_double(statement, 4, price)
+            sqlite3_bind_text(statement, 5, (imageName as NSString).utf8String, -1, nil)
             
             if sqlite3_step(statement) != SQLITE_DONE {
                 print("Could not insert row.")
@@ -205,5 +252,132 @@ final class DatabaseManager {
         
         sqlite3_finalize(statement)
         return true
+    }
+}
+
+extension DatabaseManager {
+    
+    // 1. New method to sync local DB with Cloud DB
+    func syncMenuWithFirebase(completion: @escaping (Bool) -> Void) {
+        let db = Firestore.firestore()
+        
+        db.collection("menu_items").getDocuments { [weak self] (querySnapshot, error) in
+            guard let self = self else { return }
+            
+            if let error = error {
+                print("Error getting documents: \(error)")
+                completion(false)
+                return
+            }
+            
+            guard let documents = querySnapshot?.documents else {
+                completion(true) // No data is effectively a success
+                return
+            }
+            
+            // 2. Clear current cache to ensure deleted items are removed
+            self.clearMenuTable()
+            
+            // 3. Save new data from Firebase to SQLite
+            for document in documents {
+                let data = document.data()
+                let docID = document.documentID
+                
+                let name = data["name"] as? String ?? ""
+                let description = data["description"] as? String ?? ""
+                let price = data["price"] as? Double ?? 0.0
+                let imageName = data["imageName"] as? String ?? ""
+                
+                // Insert into local SQLite
+                _ = self.insertMenuItem(firebaseID: docID,
+                                        name: name,
+                                        description: description,
+                                        price: price,
+                                        imageName: imageName)
+            }
+            
+            // 4. Notify Caller
+            completion(true)
+        }
+    }
+    
+    // Helper to clear table before re-populating
+    private func clearMenuTable() {
+        guard let db = db else { return }
+        let deleteSQL = "DELETE FROM menu_items;"
+        var statement: OpaquePointer?
+        if sqlite3_prepare_v2(db, deleteSQL, -1, &statement, nil) == SQLITE_OK {
+            sqlite3_step(statement)
+        }
+        sqlite3_finalize(statement)
+    }
+}
+
+// MARK: - Composite Actions (SQLite + Firebase)
+// These methods bridge the gap between Local and Cloud.
+
+extension DatabaseManager {
+    
+    /// Create a new item in BOTH Firebase and SQLite
+    func createMenuItem(name: String, description: String, price: Double, imageName: String) {
+        // 1. Generate a unique ID from Firebase (but don't save yet)
+        let newDocRef = Firestore.firestore().collection("menu_items").document()
+        let newID = newDocRef.documentID
+        
+        // 2. Save to SQLite immediately (so UI updates instantly)
+        _ = insertMenuItem(firebaseID: newID,
+                           name: name,
+                           description: description,
+                           price: price,
+                           imageName: imageName)
+        
+        // 3. Save to Firebase in the background
+        let data: [String: Any] = [
+            "name": name,
+            "description": description,
+            "price": price,
+            "imageName": imageName
+        ]
+        
+        newDocRef.setData(data) { error in
+            if let error = error {
+                print("Error saving to Firestore: \(error)")
+            } else {
+                print("Successfully saved to Firestore")
+            }
+        }
+    }
+    
+    /// Delete an item from BOTH Firebase and SQLite
+    func deleteMenuItem(localID: Int64, firebaseID: String) {
+        // 1. Delete from SQLite (Instant UI removal)
+        _ = deleteMenuItem(id: localID)
+        
+        // 2. Delete from Firebase
+        if !firebaseID.isEmpty {
+            Firestore.firestore().collection("menu_items").document(firebaseID).delete { error in
+                if let error = error {
+                    print("Error deleting from Firestore: \(error)")
+                }
+            }
+        }
+    }
+    
+    /// Update an item in BOTH Firebase and SQLite
+    func updateMenuItemComposite(_ item: MenuItem) {
+        // 1. Update SQLite
+        _ = updateMenuItem(item)
+        
+        // 2. Update Firebase
+        if !item.firebaseID.isEmpty {
+            let data: [String: Any] = [
+                "name": item.name,
+                "description": item.description,
+                "price": item.price,
+                "imageName": item.imageName
+            ]
+            
+            Firestore.firestore().collection("menu_items").document(item.firebaseID).updateData(data)
+        }
     }
 }

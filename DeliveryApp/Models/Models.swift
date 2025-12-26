@@ -9,6 +9,7 @@ import Foundation
 
 struct MenuItem: Identifiable, Equatable {
     let id: Int64
+    let firebaseID: String
     var name: String
     var description: String
     var price: Double

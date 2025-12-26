@@ -36,6 +36,13 @@ struct ContentView: View {
                     .listStyle(.plain)
                 }
             }
+            .listStyle(.plain)
+            .refreshable {
+                menuViewModel.refreshData()
+            }
+            .onAppear {
+                menuViewModel.refreshData()
+            }
             .navigationTitle("Local Eats")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -47,13 +54,6 @@ struct ContentView: View {
                 }
             
                 ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button {
-                        Task { await menuViewModel.loadMenu() }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                    .accessibilityLabel("Refresh menu")
-                    
                     NavigationLink {
                         CartView()
                             .environmentObject(cartViewModel)
