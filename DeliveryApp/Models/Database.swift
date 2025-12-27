@@ -102,8 +102,6 @@ final class DatabaseManager {
     
     // MARK: - Seeding
     
-    // MARK: - Seeding
-    
     private func seedInitialMenuIfNeeded() {
         if !fetchMenuItems().isEmpty {
             return
@@ -176,7 +174,7 @@ final class DatabaseManager {
     func insertMenuItem(firebaseID: String, name: String, description: String, price: Double, imageName: String) -> Int64? {
         guard let db = db else { return nil }
         
-        let insertSQL = "INSERT INTO menu_items (firebase_id, name, description, price, imageName) VALUES (?, ?, ?, ?);"
+        let insertSQL = "INSERT INTO menu_items (firebase_id, name, description, price, imageName) VALUES (?, ?, ?, ?, ?);"
         var statement: OpaquePointer?
         
         if sqlite3_prepare_v2(db, insertSQL, -1, &statement, nil) == SQLITE_OK {
