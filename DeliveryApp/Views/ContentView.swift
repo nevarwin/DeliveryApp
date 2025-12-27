@@ -16,9 +16,13 @@ struct ContentView: View {
         NavigationStack {
             Group {
                 if menuViewModel.menuItems.isEmpty {
-                    ContentUnavailableView("No dishes yet",
-                                           systemImage: "takeoutbag.and.cup.and.straw.fill",
-                                           description: Text("Pull to refresh to load the house specials."))
+                    ScrollView {
+                        ContentUnavailableView("No dishes yet",
+                                               systemImage: "takeoutbag.and.cup.and.straw.fill",
+                                               description: Text("Pull to refresh to load the house specials."))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.top, 100)
+                    }
                 } else {
                     List {
                         ForEach(menuViewModel.menuItems) { item in
@@ -52,7 +56,7 @@ struct ContentView: View {
                         Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
                     }
                 }
-            
+                
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     NavigationLink {
                         CartView()
@@ -186,7 +190,7 @@ struct CartView: View {
                                     value: .init(
                                         get: { cartItem.quantity },
                                         set: { newValue in
-                                                cartViewModel.updateQuantity(for: cartItem.item, quantity: newValue)
+                                            cartViewModel.updateQuantity(for: cartItem.item, quantity: newValue)
                                         }
                                     ),
                                     in: 1...20
