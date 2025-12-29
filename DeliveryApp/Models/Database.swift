@@ -258,6 +258,7 @@ extension DatabaseManager {
     // 1. New method to sync local DB with Cloud DB
     func syncMenuWithFirebase(completion: @escaping (Bool) -> Void) {
         let db = Firestore.firestore()
+        let localItems = self.fetchMenuItems()
         
         db.collection("menu_items").getDocuments { [weak self] (querySnapshot, error) in
             guard let self = self else { return }
@@ -270,6 +271,12 @@ extension DatabaseManager {
             
             guard let documents = querySnapshot?.documents else {
                 completion(true) // No data is effectively a success
+                return
+            }
+            
+            if documents.isEmpty && !localItems.isEmpty {
+                print("Firebase empty, preserving local seeded data")
+                completion(true)
                 return
             }
             
