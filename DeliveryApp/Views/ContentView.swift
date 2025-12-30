@@ -44,9 +44,6 @@ struct ContentView: View {
             .refreshable {
                 menuViewModel.refreshData()
             }
-            .onAppear {
-                menuViewModel.refreshData()
-            }
             .navigationTitle("Local Eats")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
